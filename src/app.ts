@@ -59,11 +59,48 @@ class ProjectInput {
 		this.attach();
 	}
 
+	// tuple type and the void type tells TS there is a chance that this method will return nothing
+	private gatherUserInput(): [string, string, number] | void {
+		// set the values of the input fields to the variables
+		const enteredTitle = this.titleInputElement.value;
+		const enteredDescription = this.descriptionInputElement.value;
+		const enteredPeople = this.peopleInputElement.value;
+
+		// approach 1
+		// if (
+		//   enteredTitle.trim().length === 0 ||
+		//   enteredDescription.trim().length === 0 ||
+		//   enteredPeople.trim().length === 0
+		// ) {
+		//   alert('Invalid input, please try again!');
+		//   return;
+		// } else {
+		//   return [enteredTitle, enteredDescription, +enteredPeople];
+		// }
+
+		// cleaner approach
+	}
+
+	private clearInputs() {
+		this.titleInputElement.value = '';
+		this.descriptionInputElement.value = '';
+		this.peopleInputElement.value = '';
+	}
+
 	@AutoBind
 	// binding the configure method to this method so that we can use 'this' in the configure method
 	private submitHandler(event: Event) {
 		event.preventDefault();
-		console.log(this.titleInputElement.value);
+		const userInput = this.gatherUserInput();
+		// Array is built into JS and is a global object... isArray is a static method on the Array object
+		if (Array.isArray(userInput)) {
+			// destructure the array into 3 variables
+			const [title, desc, people] = userInput;
+			// log the variables
+			console.log(title, desc, people);
+			// clear the input fields
+			this.clearInputs();
+		}
 	}
 
 	// keeping a separation of concerns is why we are setting this up as private
