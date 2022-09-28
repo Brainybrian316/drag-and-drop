@@ -108,13 +108,23 @@ class ProjectItem extends Component {
             return `${this.project.people} persons`;
         }
     }
-    configure() { }
+    dragStartHandler(event) {
+        console.log(event);
+    }
+    dragEndHandler(_) { }
+    configure() {
+        this.element.addEventListener('dragstart', this.dragStartHandler);
+        this.element.addEventListener('dragend', this.dragEndHandler);
+    }
     renderContent() {
         this.element.querySelector('h2').textContent = this.project.title;
         this.element.querySelector('h3').textContent = this.plural + ' assigned';
         this.element.querySelector('p').textContent = this.project.description;
     }
 }
+__decorate([
+    AutoBind
+], ProjectItem.prototype, "dragStartHandler", null);
 class ProjectList extends Component {
     constructor(type) {
         super('project-list', 'app', false, `${type}-projects`);
@@ -123,7 +133,19 @@ class ProjectList extends Component {
         this.configure();
         this.renderContent();
     }
+    dragOverHandler(_) {
+        const listEl = this.element.querySelector('ul');
+        listEl.classList.add('droppable');
+    }
+    dropHandler(_) { }
+    dragLeaveHandler(_) {
+        const listEl = this.element.querySelector('ul');
+        listEl.classList.remove('droppable');
+    }
     configure() {
+        this.element.addEventListener('dragover', this.dragOverHandler);
+        this.element.addEventListener('dragleave', this.dragLeaveHandler);
+        this.element.addEventListener('drop', this.dropHandler);
         projectState.addListener((projects) => {
             const relevantProjects = projects.filter((prj) => {
                 if (this.type === 'active') {
@@ -148,6 +170,12 @@ class ProjectList extends Component {
         this.element.querySelector('h2').textContent = this.type.toUpperCase() + ' PROJECTS';
     }
 }
+__decorate([
+    AutoBind
+], ProjectList.prototype, "dragOverHandler", null);
+__decorate([
+    AutoBind
+], ProjectList.prototype, "dragLeaveHandler", null);
 class ProjectInput extends Component {
     constructor() {
         super('project-input', 'app', true, 'user-input');

@@ -2,7 +2,7 @@
 interface Draggable {
 	// drag event is built into TS
 	dragStartHandler(event: DragEvent): void;
-	DragEndHandler(event: DragEvent): void;
+	dragEndHandler(event: DragEvent): void;
 }
 
 interface DragTarget {
@@ -229,7 +229,7 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> implements 
 }
 
 // ! project list class
-class ProjectList extends Component<HTMLDivElement, HTMLElement> {
+class ProjectList extends Component<HTMLDivElement, HTMLElement> implements DragTarget {
 	// class fields
 	assignedProjects: Project[];
 
@@ -242,8 +242,26 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> {
 		this.renderContent();
 	}
 
+	@AutoBind
+	dragOverHandler(_: DragEvent) {
+		const listEl = this.element.querySelector('ul')!;
+		listEl.classList.add('droppable');
+	}
+
+	dropHandler(_: DragEvent) {}
+
+	@AutoBind
+	dragLeaveHandler(_: DragEvent) {
+		const listEl = this.element.querySelector('ul')!;
+		listEl.classList.remove('droppable');
+	}
+
 	// configure method
 	configure() {
+		// register listeners on the element itself (this.element)
+		this.element.addEventListener('dragover', this.dragOverHandler);
+		this.element.addEventListener('dragleave', this.dragLeaveHandler);
+		this.element.addEventListener('drop', this.dropHandler);
 		// reach out to project state class  to register a listener and pass in a function that will be called when the state changes
 		projectState.addListener((projects: Project[]) => {
 			// filter the project based on if they are active or finished
