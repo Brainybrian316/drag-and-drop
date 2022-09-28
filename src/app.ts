@@ -1,3 +1,31 @@
+//! project state management class
+class ProjectState {
+	private projects: any[] = [];
+	private static instance: ProjectState;
+
+	private constructor() {}
+
+	static getInstance() {
+		if (this.instance) {
+			return this.instance;
+		}
+		this.instance = new ProjectState();
+		return this.instance;
+	}
+
+	addProject(title: string, description: string, people: number) {
+		const newProject = {
+			id: Math.random().toString(),
+			title: title,
+			description: description,
+			people: people,
+		};
+		this.projects.push(newProject);
+	}
+}
+
+const projectState = ProjectState.getInstance();
+
 /* notes: 
 1. decorators take 3 arguments: target, propertyKey, descriptor
 2. target is the class prototype

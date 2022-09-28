@@ -5,6 +5,28 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+class ProjectState {
+    constructor() {
+        this.projects = [];
+    }
+    static getInstance() {
+        if (this.instance) {
+            return this.instance;
+        }
+        this.instance = new ProjectState();
+        return this.instance;
+    }
+    addProject(title, description, people) {
+        const newProject = {
+            id: Math.random().toString(),
+            title: title,
+            description: description,
+            people: people,
+        };
+        this.projects.push(newProject);
+    }
+}
+const projectState = ProjectState.getInstance();
 function AutoBind(_target, _methodName, descriptor) {
     const originalMethod = descriptor.value;
     const adjustedDescriptor = {
