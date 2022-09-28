@@ -70,6 +70,18 @@ class ProjectState extends State<Project> {
 			ProjectStatus.Active, // default status using the enum
 		);
 		this.projects.push(newProject);
+		this.updateListeners();
+	}
+
+	moveProject(projectId: string, newStatus: ProjectStatus) {
+		const project = this.projects.find((project) => project.id === projectId);
+		if (project && project.status !== newStatus) {
+			project.status = newStatus;
+			this.updateListeners();
+		}
+	}
+
+	private updateListeners() {
 		// loop through all the listeners and call them to update the UI
 		for (const listenerFn of this.listeners) {
 			// use slice so it doesn't mutate the original array
@@ -257,7 +269,15 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> implements Drag
 		}
 	}
 
-	dropHandler(_: DragEvent) {}
+	@AutoBind
+	dropHandler(event: DragEvent) {
+		const projectId = event.dataTransfer!.getData('text/plain');
+		// we use the static method from the project state class
+		projectState.moveProject(
+			projectId,
+			this.type === 'active' ? ProjectStatus.Active : ProjectStatus.Finished,
+		);
+	}
 
 	@AutoBind
 	dragLeaveHandler(_: DragEvent) {
