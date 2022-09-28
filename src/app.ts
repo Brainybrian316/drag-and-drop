@@ -1,5 +1,6 @@
 //! project state management class
 class ProjectState {
+	private listeners: any[] = [];
 	private projects: any[] = [];
 	private static instance: ProjectState;
 
@@ -13,6 +14,11 @@ class ProjectState {
 		return this.instance;
 	}
 
+	addListener(listenerFn: Function) {
+		// the idea is to have an array of function references so that when something changes we can loop through them and call them
+		this.listeners.push(listenerFn);
+	}
+
 	addProject(title: string, description: string, people: number) {
 		const newProject = {
 			id: Math.random().toString(),
@@ -21,6 +27,11 @@ class ProjectState {
 			people: people,
 		};
 		this.projects.push(newProject);
+		// loop through all the listeners and call them to update the UI
+		for (const listenerFn of this.listeners) {
+			// use slice so it doesn't mutate the original array
+			listenerFn(this.projects.slice());
+		}
 	}
 }
 
@@ -90,15 +101,19 @@ function validate(validatableInput: ValidationTemplate) {
 
 // ! project list class
 class ProjectList {
+	// class fields
 	templateElement: HTMLTemplateElement;
 	hostElement: HTMLDivElement;
 	element: HTMLElement;
+	assignedProjects: any[];
 
 	constructor(private type: 'active' | 'finished') {
 		// '!' tells typescript to be non-null
 		this.templateElement = document.getElementById('project-list')! as HTMLTemplateElement;
 		// 'as' is type casting to let typescript know this will be of 'element'
 		this.hostElement = document.getElementById('app')! as HTMLDivElement;
+		// reference the field above
+		this.assignedProjects = [];
 
 		// importNode is a document property on the document object 'content' exist on HTML elements
 		const importedNode = document.importNode(this.templateElement.content, true); // takes 2 arguments
@@ -106,8 +121,33 @@ class ProjectList {
 		this.element = importedNode.firstElementChild as HTMLElement; // keep in mind the first child will be a <ul>
 		// dynamically set the id of the ul element'
 		this.element.id = `${this.type}-projects`;
+
+		// reach out to project state class  to register a listener and pass in a function that will be called when the state changes
+		projectState.addListener((projects: any[]) => {
+			//gets a list of projects
+			// set assigned projects to the projects that we are getting when a project is added
+			this.assignedProjects = projects;
+			// call render projects to render the projects to the DOM via renderProjects method
+			this.renderProjects();
+		});
+
 		this.attach();
 		this.renderContent();
+	}
+
+	// will only be called when the state changes
+	private renderProjects() {
+		// rely on the id of the render content method to determine which projects to render
+		const listEl = document.getElementById(`${this.type}-project-list`)! as HTMLUListElement;
+		// loop through and render all the projects we add/have
+		for (const projectItem of this.assignedProjects) {
+			// dynamically create an li element
+			const listItem = document.createElement('li');
+			// set the new li element to the project title from the projectItem object
+			listItem.textContent = projectItem.title;
+			// display the projects in the list
+			listEl.appendChild(listItem);
+		}
 	}
 
 	private renderContent() {
@@ -228,8 +268,8 @@ class ProjectInput {
 		if (Array.isArray(userInput)) {
 			// destructure the array into 3 variables
 			const [title, desc, people] = userInput;
-			// log the variables
-			console.log(title, desc, people);
+			// store the values in a new project and pass it to the state class to add it to the projects array
+			projectState.addProject(title, desc, people);
 			// clear the input fields
 			this.clearInputs();
 		}
