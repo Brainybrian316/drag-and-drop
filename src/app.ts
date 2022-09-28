@@ -232,7 +232,7 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> {
 		// loop through and render all the projects we add/have
 		for (const projectItem of this.assignedProjects) {
 			// create an instance of the project item class and pass in the id of the list element and the project
-			new ProjectItem(this.element.id, projectItem);
+			new ProjectItem(this.element.querySelector('ul')!.id, projectItem);
 		}
 	}
 

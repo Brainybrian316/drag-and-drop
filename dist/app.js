@@ -131,7 +131,7 @@ class ProjectList extends Component {
         const listEl = document.getElementById(`${this.type}-project-list`);
         listEl.innerHTML = '';
         for (const projectItem of this.assignedProjects) {
-            new ProjectItem(this.element.id, projectItem);
+            new ProjectItem(this.element.querySelector('ul').id, projectItem);
         }
     }
     renderContent() {
