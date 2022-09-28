@@ -24,6 +24,42 @@ function AutoBind(_target: any, _methodName: string, descriptor: PropertyDescrip
 	return adjustedDescriptor;
 }
 
+// validator decorator
+interface ValidationTemplate {
+	value: string | number;
+	// '?' means optional
+	required?: boolean; // true or false
+	minLength?: number;
+	maxLength?: number;
+	min?: number;
+	max?: number;
+}
+
+function validate(validatableInput: ValidationTemplate) {
+	let isValid = true;
+	// value is required and not set to empty
+	if (validatableInput.required) {
+		// ensures new value of isValid will be false if the thing after && is false (if 1 is false all is false)
+		isValid = isValid && validatableInput.value.toString().trim().length !== 0;
+	}
+	// if minLength is not undefined (empty) and that the value is a string
+	if (validatableInput.minLength != null && typeof validatableInput.value === 'string') {
+		// define the length of the value in the object. if the length is less than the minLength, isValid is false
+		isValid = isValid && validatableInput.value.length > validatableInput.minLength;
+	}
+	if (validatableInput.maxLength != null && typeof validatableInput.value === 'string') {
+		isValid = isValid && validatableInput.value.length < validatableInput.maxLength;
+	}
+	if (validatableInput.min != null && typeof validatableInput.value === 'number') {
+		isValid = isValid && validatableInput.value >= validatableInput.min;
+	}
+	if (validatableInput.max != null && typeof validatableInput.value === 'number') {
+		isValid = isValid && validatableInput.value < validatableInput.max;
+	}
+	// after all the checks, return the value of isValid
+	return isValid;
+}
+
 class ProjectInput {
 	// these are the fields of our class
 	templateElement: HTMLTemplateElement;
@@ -66,6 +102,25 @@ class ProjectInput {
 		const enteredDescription = this.descriptionInputElement.value;
 		const enteredPeople = this.peopleInputElement.value;
 
+		// create and object with the validatable properties
+		const titleValidatable: ValidationTemplate = {
+			// fields of the interface
+			value: enteredTitle, // value of the input field for title
+			required: true, // tells the validator that the value is required
+		};
+		const descriptionValidatable: ValidationTemplate = {
+			value: enteredDescription, // value of the input field for description
+			required: true,
+			minLength: 5, // tells the validator that the value must be at least 5 characters long
+		};
+		const peopleValidatable: ValidationTemplate = {
+			// + converts the string to a number
+			value: +enteredPeople, // value of the input field for people
+			required: true,
+			min: 1, // tells the validator that the value must be at least 1
+			max: 5, // tells the validator that the value must be less than 5
+		};
+
 		// approach 1
 		// if (
 		//   enteredTitle.trim().length === 0 ||
@@ -79,9 +134,21 @@ class ProjectInput {
 		// }
 
 		// cleaner approach
+		if (
+			// checks if any of the values are false and if so returns false aka the alert
+			!validate(titleValidatable) ||
+			!validate(descriptionValidatable) ||
+			!validate(peopleValidatable)
+		) {
+			alert('Invalid input, please try again!');
+			return;
+		} else {
+			return [enteredTitle, enteredDescription, +enteredPeople];
+		}
 	}
 
 	private clearInputs() {
+		// set the value of the input fields to an empty string
 		this.titleInputElement.value = '';
 		this.descriptionInputElement.value = '';
 		this.peopleInputElement.value = '';
@@ -105,6 +172,7 @@ class ProjectInput {
 
 	// keeping a separation of concerns is why we are setting this up as private
 	private configure() {
+		// when the form is submitted, call the submitHandler method
 		this.element.addEventListener('submit', this.submitHandler);
 	}
 
