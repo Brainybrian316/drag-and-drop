@@ -15,15 +15,26 @@ class Project {
 }
 
 // listener for listener type field
-type Listener = (items: Project[]) => void;
+type Listener<T> = (items: T[]) => void;
+
+// base state class
+class State<T> {
+	protected listeners: Listener<T>[] = [];
+
+	addListener(listenerFn: Listener<T>) {
+		// the idea is to have an array of function references so that when something changes we can loop through them and call them
+		this.listeners.push(listenerFn);
+	}
+}
 
 //! project state management class
-class ProjectState {
-	private listeners: Listener[] = [];
+class ProjectState extends State<Project> {
 	private projects: Project[] = [];
 	private static instance: ProjectState;
 
-	private constructor() {}
+	private constructor() {
+		super();
+	}
 
 	static getInstance() {
 		if (this.instance) {
@@ -31,11 +42,6 @@ class ProjectState {
 		}
 		this.instance = new ProjectState();
 		return this.instance;
-	}
-
-	addListener(listenerFn: Listener) {
-		// the idea is to have an array of function references so that when something changes we can loop through them and call them
-		this.listeners.push(listenerFn);
 	}
 
 	addProject(title: string, description: string, people: number) {
