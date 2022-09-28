@@ -60,6 +60,43 @@ function validate(validatableInput: ValidationTemplate) {
 	return isValid;
 }
 
+// ! project list class
+class ProjectList {
+	templateElement: HTMLTemplateElement;
+	hostElement: HTMLDivElement;
+	element: HTMLElement;
+
+	constructor(private type: 'active' | 'finished') {
+		// '!' tells typescript to be non-null
+		this.templateElement = document.getElementById('project-list')! as HTMLTemplateElement;
+		// 'as' is type casting to let typescript know this will be of 'element'
+		this.hostElement = document.getElementById('app')! as HTMLDivElement;
+
+		// importNode is a document property on the document object 'content' exist on HTML elements
+		const importedNode = document.importNode(this.templateElement.content, true); // takes 2 arguments
+		// points to the node element of the template element which is a ul element in this case
+		this.element = importedNode.firstElementChild as HTMLElement; // keep in mind the first child will be a <ul>
+		// dynamically set the id of the ul element'
+		this.element.id = `${this.type}-projects`;
+		this.attach();
+		this.renderContent();
+	}
+
+	private renderContent() {
+		// set the list id to the type of project
+		const listId = `${this.type}-project-list`;
+		// get the ul element telling TS it will not be null and set the id to the listId
+		this.element.querySelector('ul')!.id = listId;
+		// this 'type' is active or finished (heading of section)
+		this.element.querySelector('h2')!.textContent = this.type.toUpperCase() + ' PROJECTS';
+	}
+
+	private attach() {
+		this.hostElement.insertAdjacentElement('beforeend', this.element);
+	}
+}
+
+//! project input class
 class ProjectInput {
 	// these are the fields of our class
 	templateElement: HTMLTemplateElement;
@@ -183,3 +220,7 @@ class ProjectInput {
 }
 // create a new instance of the class to render the form to the DOM when the app loads
 const prjInput = new ProjectInput();
+
+const activeProjectList = new ProjectList('active');
+
+const finishedProjectList = new ProjectList('finished');
