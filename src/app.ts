@@ -1,7 +1,26 @@
+// ! project type
+// enum for project status
+enum ProjectStatus {
+	Active,
+	Finished,
+}
+class Project {
+	constructor(
+		public id: string,
+		public title: string,
+		public description: string,
+		public people: number,
+		public status: ProjectStatus,
+	) {}
+}
+
+// listener for listener type field
+type Listener = (items: Project[]) => void;
+
 //! project state management class
 class ProjectState {
-	private listeners: any[] = [];
-	private projects: any[] = [];
+	private listeners: Listener[] = [];
+	private projects: Project[] = [];
 	private static instance: ProjectState;
 
 	private constructor() {}
@@ -14,18 +33,20 @@ class ProjectState {
 		return this.instance;
 	}
 
-	addListener(listenerFn: Function) {
+	addListener(listenerFn: Listener) {
 		// the idea is to have an array of function references so that when something changes we can loop through them and call them
 		this.listeners.push(listenerFn);
 	}
 
 	addProject(title: string, description: string, people: number) {
-		const newProject = {
-			id: Math.random().toString(),
-			title: title,
-			description: description,
-			people: people,
-		};
+		// create a new project with a unique id
+		const newProject = new Project(
+			Math.random().toString(),
+			title,
+			description,
+			people,
+			ProjectStatus.Active, // default status using the enum
+		);
 		this.projects.push(newProject);
 		// loop through all the listeners and call them to update the UI
 		for (const listenerFn of this.listeners) {
@@ -105,7 +126,7 @@ class ProjectList {
 	templateElement: HTMLTemplateElement;
 	hostElement: HTMLDivElement;
 	element: HTMLElement;
-	assignedProjects: any[];
+	assignedProjects: Project[];
 
 	constructor(private type: 'active' | 'finished') {
 		// '!' tells typescript to be non-null
@@ -123,7 +144,7 @@ class ProjectList {
 		this.element.id = `${this.type}-projects`;
 
 		// reach out to project state class  to register a listener and pass in a function that will be called when the state changes
-		projectState.addListener((projects: any[]) => {
+		projectState.addListener((projects: Project[]) => {
 			//gets a list of projects
 			// set assigned projects to the projects that we are getting when a project is added
 			this.assignedProjects = projects;
