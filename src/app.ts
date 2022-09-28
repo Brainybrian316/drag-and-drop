@@ -145,9 +145,15 @@ class ProjectList {
 
 		// reach out to project state class  to register a listener and pass in a function that will be called when the state changes
 		projectState.addListener((projects: Project[]) => {
-			//gets a list of projects
+			// filter the project based on if they are active or finished
+			const relevantProjects = projects.filter((prj) => {
+				if (this.type === 'active') {
+					return prj.status === ProjectStatus.Active;
+				}
+				return prj.status === ProjectStatus.Finished;
+			});
 			// set assigned projects to the projects that we are getting when a project is added
-			this.assignedProjects = projects;
+			this.assignedProjects = relevantProjects;
 			// call render projects to render the projects to the DOM via renderProjects method
 			this.renderProjects();
 		});
@@ -160,6 +166,8 @@ class ProjectList {
 	private renderProjects() {
 		// rely on the id of the render content method to determine which projects to render
 		const listEl = document.getElementById(`${this.type}-project-list`)! as HTMLUListElement;
+		// clear the list to avoid duplicates
+		listEl.innerHTML = '';
 		// loop through and render all the projects we add/have
 		for (const projectItem of this.assignedProjects) {
 			// dynamically create an li element
