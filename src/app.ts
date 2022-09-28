@@ -210,7 +210,10 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> implements 
 
 	@AutoBind
 	dragStartHandler(event: DragEvent) {
-		console.log(event);
+		// we set the dataTransfer property of the event to the id of the project dataTransfer is built into the browser
+		event.dataTransfer!.setData('text/plain', this.project.id);
+		// effectAllowed is a property of the dataTransfer object
+		event.dataTransfer!.effectAllowed = 'move';
 	}
 
 	dragEndHandler(_: DragEvent) {}
@@ -243,9 +246,15 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> implements Drag
 	}
 
 	@AutoBind
-	dragOverHandler(_: DragEvent) {
-		const listEl = this.element.querySelector('ul')!;
-		listEl.classList.add('droppable');
+	dragOverHandler(event: DragEvent) {
+		// we check if the event is a valid drop event we check type of event
+		if (event.dataTransfer && event.dataTransfer.types[0] === 'text/plain') {
+			// tells the browser for this element we want to allow the drop
+			event.preventDefault();
+			// get the ul element and set the background color
+			const listEl = this.element.querySelector('ul')!;
+			listEl.classList.add('droppable');
+		}
 	}
 
 	dropHandler(_: DragEvent) {}
