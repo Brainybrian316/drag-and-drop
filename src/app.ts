@@ -1,3 +1,19 @@
+// drag and drop interfaces
+interface Draggable {
+	// drag event is built into TS
+	dragStartHandler(event: DragEvent): void;
+	DragEndHandler(event: DragEvent): void;
+}
+
+interface DragTarget {
+	// signals that the thing is a valid drag target
+	dragOverHandler(event: DragEvent): void;
+	// react to the actual drop that happens
+	dropHandler(event: DragEvent): void;
+	// visual feedback for the user if dragged over the box or revert visual update
+	dragLeaveHandler(event: DragEvent): void;
+}
+
 // ! project type
 // enum for project status
 enum ProjectStatus {
@@ -170,7 +186,7 @@ function validate(validatableInput: ValidationTemplate) {
 	return isValid;
 }
 
-class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
+class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> implements Draggable {
 	private project: Project;
 
 	get plural() {
@@ -192,7 +208,19 @@ class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
 		this.renderContent();
 	}
 
-	configure() {}
+	@AutoBind
+	dragStartHandler(event: DragEvent) {
+		console.log(event);
+	}
+
+	dragEndHandler(_: DragEvent) {}
+
+	configure() {
+		// 'dragstart' is a built in event
+		this.element.addEventListener('dragstart', this.dragStartHandler);
+		// 'dragend' is a built in event
+		this.element.addEventListener('dragend', this.dragEndHandler);
+	}
 	renderContent() {
 		this.element.querySelector('h2')!.textContent = this.project.title;
 		this.element.querySelector('h3')!.textContent = this.plural + ' assigned';
