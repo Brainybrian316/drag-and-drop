@@ -170,6 +170,27 @@ function validate(validatableInput: ValidationTemplate) {
 	return isValid;
 }
 
+class ProjectItem extends Component<HTMLUListElement, HTMLLIElement> {
+	private project: Project;
+	constructor(hostId: string, project: Project) {
+		// id of the template element, id of the host element which is the ul element, we insert at the end, id of the li element(project)
+		super('single-project', hostId, false, project.id);
+		// references the project property of the class
+		this.project = project;
+
+		// passed down from the base class
+		this.configure();
+		this.renderContent();
+	}
+
+	configure() {}
+	renderContent() {
+		this.element.querySelector('h2')!.textContent = this.project.title;
+		this.element.querySelector('h3')!.textContent = this.project.people.toString();
+		this.element.querySelector('p')!.textContent = this.project.description;
+	}
+}
+
 // ! project list class
 class ProjectList extends Component<HTMLDivElement, HTMLElement> {
 	// class fields
@@ -181,7 +202,6 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> {
 		this.assignedProjects = [];
 
 		this.configure();
-
 		this.renderContent();
 	}
 
@@ -211,12 +231,8 @@ class ProjectList extends Component<HTMLDivElement, HTMLElement> {
 		listEl.innerHTML = '';
 		// loop through and render all the projects we add/have
 		for (const projectItem of this.assignedProjects) {
-			// dynamically create an li element
-			const listItem = document.createElement('li');
-			// set the new li element to the project title from the projectItem object
-			listItem.textContent = projectItem.title;
-			// display the projects in the list
-			listEl.appendChild(listItem);
+			// create an instance of the project item class and pass in the id of the list element and the project
+			new ProjectItem(this.element.id, projectItem);
 		}
 	}
 
