@@ -95,6 +95,50 @@ interface ValidationTemplate {
 	max?: number;
 }
 
+//! component base class (abstract means no one can instantiate this class)
+abstract class Component<T extends HTMLElement, U extends HTMLElement> {
+	templateElement: HTMLTemplateElement;
+	hostElement: T;
+	element: U;
+
+	constructor(
+		templateId: string,
+		hostElementId: string,
+		insertAtStart: boolean,
+		newElementId?: string,
+	) {
+		// '!' tells typescript to be non-null
+		this.templateElement = document.getElementById(templateId)! as HTMLTemplateElement;
+		// 'as' is type casting to let typescript know this will be of 'element'
+		this.hostElement = document.getElementById(hostElementId)! as T;
+
+		// importNode is a document property on the document object 'content' exist on HTML elements
+		const importedNode = document.importNode(this.templateElement.content, true); // takes 2 arguments
+		// points to the node element of the template element which is a ul element in this case
+		this.element = importedNode.firstElementChild as U; // keep in mind the first child will be a <ul>
+		// check if newElementId is defined since it is optional
+		if (newElementId) {
+			// dynamically set the id of the ul element'
+			this.element.id = newElementId;
+		}
+
+		this.attach(insertAtStart);
+	}
+
+	// takes in argument from the constructor
+	private attach(insertAtBeginning: boolean) {
+		// if insertAtBeginning is true then insert the element at the beginning of the host element else...
+		this.hostElement.insertAdjacentElement(
+			insertAtBeginning ? 'afterbegin' : 'beforeend',
+			this.element,
+		);
+	}
+
+	abstract configure(): void;
+
+	abstract renderContent(): void;
+}
+
 function validate(validatableInput: ValidationTemplate) {
 	let isValid = true;
 	// value is required and not set to empty
@@ -121,28 +165,22 @@ function validate(validatableInput: ValidationTemplate) {
 }
 
 // ! project list class
-class ProjectList {
+class ProjectList extends Component<HTMLDivElement, HTMLElement> {
 	// class fields
-	templateElement: HTMLTemplateElement;
-	hostElement: HTMLDivElement;
-	element: HTMLElement;
 	assignedProjects: Project[];
 
 	constructor(private type: 'active' | 'finished') {
-		// '!' tells typescript to be non-null
-		this.templateElement = document.getElementById('project-list')! as HTMLTemplateElement;
-		// 'as' is type casting to let typescript know this will be of 'element'
-		this.hostElement = document.getElementById('app')! as HTMLDivElement;
+		super('project-list', 'app', false, `${type}-projects`);
 		// reference the field above
 		this.assignedProjects = [];
 
-		// importNode is a document property on the document object 'content' exist on HTML elements
-		const importedNode = document.importNode(this.templateElement.content, true); // takes 2 arguments
-		// points to the node element of the template element which is a ul element in this case
-		this.element = importedNode.firstElementChild as HTMLElement; // keep in mind the first child will be a <ul>
-		// dynamically set the id of the ul element'
-		this.element.id = `${this.type}-projects`;
+		this.configure();
 
+		this.renderContent();
+	}
+
+	// configure method
+	configure() {
 		// reach out to project state class  to register a listener and pass in a function that will be called when the state changes
 		projectState.addListener((projects: Project[]) => {
 			// filter the project based on if they are active or finished
@@ -157,9 +195,6 @@ class ProjectList {
 			// call render projects to render the projects to the DOM via renderProjects method
 			this.renderProjects();
 		});
-
-		this.attach();
-		this.renderContent();
 	}
 
 	// will only be called when the state changes
@@ -179,7 +214,7 @@ class ProjectList {
 		}
 	}
 
-	private renderContent() {
+	renderContent() {
 		// set the list id to the type of project
 		const listId = `${this.type}-project-list`;
 		// get the ul element telling TS it will not be null and set the id to the listId
@@ -187,34 +222,17 @@ class ProjectList {
 		// this 'type' is active or finished (heading of section)
 		this.element.querySelector('h2')!.textContent = this.type.toUpperCase() + ' PROJECTS';
 	}
-
-	private attach() {
-		this.hostElement.insertAdjacentElement('beforeend', this.element);
-	}
 }
 
 //! project input class
-class ProjectInput {
+class ProjectInput extends Component<HTMLDivElement, HTMLFormElement> {
 	// these are the fields of our class
-	templateElement: HTMLTemplateElement;
-	hostElement: HTMLDivElement;
-	element: HTMLFormElement;
 	titleInputElement: HTMLInputElement;
 	descriptionInputElement: HTMLInputElement;
 	peopleInputElement: HTMLInputElement;
 
 	constructor() {
-		// '!' tells typescript to be non-null
-		this.templateElement = document.getElementById('project-input')! as HTMLTemplateElement;
-		// 'as' is type casting to let typescript know this will be of 'element'
-		this.hostElement = document.getElementById('app')! as HTMLDivElement;
-
-		// importNode is a document property on the document object 'content' exist on HTML elements
-		const importedNode = document.importNode(this.templateElement.content, true); // takes 2 arguments
-		// points to the node element of the template element which is a form element in this case
-		this.element = importedNode.firstElementChild as HTMLFormElement; // keep in mind this is the form element
-		// makes sure the rendered element has the id of 'user-input'
-		this.element.id = 'user-input';
+		super('project-input', 'app', true, 'user-input');
 
 		/* we store the input element with the id of 'title' in the 'titleInputElement' property from the form element called this.element  since that is technically the from element */
 		this.titleInputElement = this.element.querySelector('#title') as HTMLInputElement;
@@ -225,9 +243,14 @@ class ProjectInput {
 
 		// call the configure method to set up the event listener for the form
 		this.configure();
-		// call attach method to render the form
-		this.attach();
 	}
+	// keeping a separation of concerns is why we are setting this up as private
+	configure() {
+		// when the form is submitted, call the submitHandler method
+		this.element.addEventListener('submit', this.submitHandler);
+	}
+
+	renderContent() {}
 
 	// tuple type and the void type tells TS there is a chance that this method will return nothing
 	private gatherUserInput(): [string, string, number] | void {
@@ -302,17 +325,6 @@ class ProjectInput {
 			// clear the input fields
 			this.clearInputs();
 		}
-	}
-
-	// keeping a separation of concerns is why we are setting this up as private
-	private configure() {
-		// when the form is submitted, call the submitHandler method
-		this.element.addEventListener('submit', this.submitHandler);
-	}
-
-	private attach() {
-		// place to render content and get access to concrete HTML element stored in the 'this' property
-		this.hostElement.insertAdjacentElement('afterbegin', this.element);
 	}
 }
 // create a new instance of the class to render the form to the DOM when the app loads
