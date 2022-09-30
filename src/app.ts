@@ -1,5 +1,6 @@
-import { ProjectInput } from './components/project-input';
-import { ProjectList } from './components/project-list';
+// Modules
+import { ProjectInput } from './components/project-input.js';
+import { ProjectList } from './components/project-list.js';
 
 // create a new instance of the class to render the form to the DOM when the app loads
 new ProjectInput();
